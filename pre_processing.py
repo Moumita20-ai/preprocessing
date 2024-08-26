@@ -357,3 +357,77 @@ for i in range(0, len(S)):
     img = cv2.imread(S[i])
     img_filtered = cv2.medianBlur(img, 5)
     cv2.imwrite(outpath + S[i], img_filtered)
+
+# In[7]
+# flicker removal
+import cv2
+import numpy as np
+
+# Load the video
+input_video_path = 'Full Video_m31.mp4'
+output_video_path = 'output_video_15.mp4'
+cap = cv2.VideoCapture(input_video_path)
+
+# Get video properties
+fps = int(cap.get(cv2.CAP_PROP_FPS))
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+out = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
+
+# Buffer to hold frames for temporal filtering
+buffer_size = 15  # Number of frames to average (increase for stronger smoothing)
+frame_buffer = []
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # Convert frame to float32 for accurate averaging
+    frame = frame.astype(np.float32)
+
+    # Add the current frame to the buffer
+    frame_buffer.append(frame)
+
+    # Maintain the buffer size
+    if len(frame_buffer) > buffer_size:
+        frame_buffer.pop(0)
+
+    # Calculate the average frame
+    avg_frame = np.mean(frame_buffer, axis=0)
+
+    # Convert back to uint8
+    avg_frame = np.clip(avg_frame, 0, 255).astype(np.uint8)
+
+    # Write the averaged frame to the output video
+    out.write(avg_frame)
+
+# Release resources
+cap.release()
+out.release()
+
+print(f"Flicker removed video saved as {output_video_path}")
+
+# In[8]
+# background removal
+
+#import rembg
+from rembg import remove
+#import PIL
+from PIL import Image
+from os import listdir
+import cv2
+
+
+A = listdir('D:/P5_photogrammetry/bottle/original_image/')
+
+input_path = 'D:/P5_photogrammetry/bottle/original_image/'
+output_path = 'D:/P5_photogrammetry/bottle/new_image/'
+
+
+for i in range(0, len(input_path)):
+    input_img = Image.open(input_path + A[i])
+    output_img = remove(input_img)
+    rgb_img = output_img.convert('RGB')
+    rgb_img.save(output_path + A[i])
